@@ -14,7 +14,7 @@
 | --- | --- | --- |
 | **L1 实时字幕** | 播放中实时显示字幕浮层 | 抓取视频自带 CC / AI 字幕，叠加在视频上显示；可开关、可调字号、可拖动位置 |
 | **L2 逐字稿** | 一键抓取完整逐字稿 | 支持复制全文，支持带 / 不带时间戳，支持导出 **SRT / VTT / TXT / JSON** |
-| **L3 AI 总结** | 调用大模型生成总结 | 默认 **DeepSeek**，也支持 Kimi / 通义 / OpenAI；长视频自动分段（map-reduce）；**两种模式可选** |
+| **L3 AI 总结** | 调用大模型生成总结 | 默认 **DeepSeek**，也支持 Kimi / 通义 / OpenAI；长视频自动分段（map-reduce）；**两种模式可选**；支持**一键导出为排版长图（PNG）** |
 
 ### 两种总结模式
 
@@ -79,6 +79,7 @@
 2. **看逐字稿**：切到「**逐字稿**」标签，可勾选是否「显示时间戳」，全文即完整逐字稿。
 3. **导出**：在「逐字稿」标签点击 `导出 SRT / VTT / TXT / JSON`，或「复制全文」。
 4. **生成总结**：切到「**总结**」标签 → 在「**总结模式**」下拉框选择 **通用总结** 或 **章节化笔记** → 点「**生成总结**」。长视频会自动分段并显示进度（如「正在整理第 2/5 段…」），完成后可「复制总结」或「导出 Markdown」（章节化笔记的导出文件名带 `_笔记` 后缀）。
+5. **导出图片**：点「**导出图片**」，把整份笔记渲染成**一张排版精美的长图**（PNG · 2 倍高清），适合存相册、发群里或贴进笔记软件。
 
 > **播放结束自动处理**：视频播放到结束时，会弹出提示「播放结束，逐字稿已就绪」，提供「查看逐字稿」「生成总结」按钮；若在设置里勾选了「播放结束自动生成总结」且已填写 API Key，则会按当前选定的模式自动开始总结。
 
@@ -93,6 +94,7 @@
 | **TXT** | 纯文本逐字稿，可带 / 不带时间戳 |
 | **JSON** | 结构化数据 `[{start, end, text}]`，便于二次处理 |
 | **Markdown** | 「总结」标签导出，保存 AI 生成的总结（`.md`）；章节化笔记模式文件名带 `_笔记` 后缀 |
+| **PNG（长图）** | 「导出图片」按钮，把整份笔记渲染成一张 **2 倍高清排版长图**（标题卡 / 章节色块 / 概念表格 / 复习清单），便于分享与归档 |
 
 文件名规则：`{bvid或标题}_{语言}_{时间戳}.{后缀}`。
 
@@ -146,7 +148,7 @@ B站接口或页面结构变化可能导致失效。常见修复点：① 字幕
 
 ## 八、开发者信息（可选）
 
-- 纯函数（共 **15 个**：`md5` / `getMixinKey` / `wbiSign` / `toSRT` / `toVTT` / `toTXT` / `toJSONText` / `formatTs` / `findCueIndexAt` / `chunkTranscript` / `buildSummaryPrompt` / `parseSubtitleBody` / `buildCourseNotePrompt` / `buildCourseNoteReducePrompt` / `buildCourseNoteMarkdown`）位于文件顶层作用域，可在 Node 下直接 `require()` 加载用于单元测试：
+- 纯函数（共 **16 个**：`md5` / `getMixinKey` / `wbiSign` / `toSRT` / `toVTT` / `toTXT` / `toJSONText` / `formatTs` / `findCueIndexAt` / `chunkTranscript` / `buildSummaryPrompt` / `parseSubtitleBody` / `buildCourseNotePrompt` / `buildCourseNoteReducePrompt` / `buildCourseNoteMarkdown` / `parseNoteBlocks`）位于文件顶层作用域，可在 Node 下直接 `require()` 加载用于单元测试：
 
 ```js
 const lib = require('./bilibili-caption-summary.user.js');
@@ -154,7 +156,7 @@ console.log(lib.md5('abc') === '900150983cd24fb0d6963f7d28e17f72'); // true
 ```
 
 - WBI 签名所需 MD5 为**内联自实现**，不依赖 CDN / `crypto.subtle`，避免国内网络或 API 兼容问题。
-- 单元测试：`node tests/qa-test.cjs`（共 143 个用例，零第三方依赖）。
+- 单元测试：`node tests/qa-test.cjs`（共 **152** 个用例，零第三方依赖）。
 
 ### 实现要点（便于后续维护）
 
@@ -162,3 +164,4 @@ console.log(lib.md5('abc') === '900150983cd24fb0d6963f7d28e17f72'); // true
 - 所有网络请求统一走 `request()` 封装（`GM_xmlhttpRequest`，跨域 + 带 Cookie）；调用外部大模型需在脚本头 `@connect` 声明目标域名。
 - 用户内容一律用 `textContent` 渲染，**不拼 `innerHTML`**（防 XSS）。
 - 设置项读取统一走内部函数 `readFieldValue(name)`（自动 `trim`），保证「保存设置」与「测试连接」口径一致。
+- 笔记长图用**纯 Canvas 2D 手绘**（无任何第三方库）：Markdown 文本 → `parseNoteBlocks` 结构化为块 → 按内容测量布局 → 逐块绘制 → `toBlob` 导出 PNG。渲染器的**独立开发版**在 `tools/note-render.js`，配套预览页 `tools/preview.html`（调整样式时可先在此预览确认，再同步进主脚本）。

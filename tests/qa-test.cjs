@@ -76,8 +76,10 @@ const EXPECTED_EXPORTS = [
   'md5', 'getMixinKey', 'wbiSign', 'toSRT', 'toVTT', 'toTXT',
   'toJSONText', 'formatTs', 'findCueIndexAt', 'chunkTranscript',
   'buildSummaryPrompt', 'parseSubtitleBody',
-  // 章节化笔记（增量改造新增，2024）
-  'buildCourseNotePrompt', 'buildCourseNoteReducePrompt', 'buildCourseNoteMarkdown'
+  // 章节化笔记（增量改造新增）
+  'buildCourseNotePrompt', 'buildCourseNoteReducePrompt', 'buildCourseNoteMarkdown',
+  // 笔记图片渲染（Markdown 解析层，纯函数）
+  'parseNoteBlocks'
 ];
 
 let lib = null;
@@ -92,7 +94,7 @@ test('Load', 'require() 不抛错', () => {
   assert.strictEqual(typeof globalThis.window, 'undefined', 'Node 下 window 应为 undefined');
 });
 
-test('Load', '15 个导出函数全部存在且为 function', () => {
+test('Load', '16 个导出函数全部存在且为 function', () => {
   for (const name of EXPECTED_EXPORTS) {
     assert.ok(Object.prototype.hasOwnProperty.call(lib, name), '缺少导出: ' + name);
     assert.strictEqual(typeof lib[name], 'function', name + ' 不是函数');
@@ -927,6 +929,66 @@ test('Load', '章节化笔记 3 个新导出存在（显式断言）', () => {
   test('CourseNote', 'buildCourseNoteMarkdown 标题非字符串输入被 String() 归一', () => {
     const out = lib.buildCourseNoteMarkdown('正文', { title: 12345 });
     assert.ok(/^#\s+12345/.test(out), '数字标题应转为字符串');
+  });
+})();
+
+// ============================================================
+// 7.5 笔记图片渲染 · Markdown 解析层（parseNoteBlocks）
+// ============================================================
+(function noteRenderSuite() {
+  test('NoteRender', '解析 H1/H2/H3 标题层级', () => {
+    const b = lib.parseNoteBlocks('# 大标题\n## 二级\n### 三级');
+    assert.deepStrictEqual(b.map((x) => x.type), ['h1', 'h2', 'h3']);
+    assert.strictEqual(b[0].text, '大标题');
+  });
+
+  test('NoteRender', '解析无序列表（保留加粗标记）', () => {
+    const b = lib.parseNoteBlocks('- **主键**：唯一标识');
+    assert.strictEqual(b[0].type, 'li');
+    assert.strictEqual(b[0].text, '**主键**：唯一标识');
+  });
+
+  test('NoteRender', '解析勾选清单（已选 / 未选）', () => {
+    const b = lib.parseNoteBlocks('- [ ] 待办\n- [x] 已完成');
+    assert.strictEqual(b[0].type, 'check');
+    assert.strictEqual(b[0].checked, false);
+    assert.strictEqual(b[1].checked, true);
+  });
+
+  test('NoteRender', '解析有序列表', () => {
+    const b = lib.parseNoteBlocks('1. 第一\n2. 第二');
+    assert.strictEqual(b[0].type, 'oli');
+    assert.strictEqual(b[0].index, '1');
+  });
+
+  test('NoteRender', '解析 Markdown 表格（表头 + 数据行）', () => {
+    const b = lib.parseNoteBlocks('| 概念 | 说明 |\n| --- | --- |\n| 关系 | 二维表 |');
+    assert.strictEqual(b[0].type, 'table');
+    assert.deepStrictEqual(b[0].headers, ['概念', '说明']);
+    assert.deepStrictEqual(b[0].rows, [['关系', '二维表']]);
+  });
+
+  test('NoteRender', '解析引用与分隔线', () => {
+    const b = lib.parseNoteBlocks('> 引用内容\n\n---');
+    assert.strictEqual(b[0].type, 'quote');
+    assert.strictEqual(b[0].text, '引用内容');
+    assert.strictEqual(b[1].type, 'hr');
+  });
+
+  test('NoteRender', '空行 / 空白输入不产生块', () => {
+    assert.deepStrictEqual(lib.parseNoteBlocks(''), []);
+    assert.deepStrictEqual(lib.parseNoteBlocks('\n\n   \n'), []);
+  });
+
+  test('NoteRender', 'null / undefined 输入不抛异常', () => {
+    assert.deepStrictEqual(lib.parseNoteBlocks(null), []);
+    assert.deepStrictEqual(lib.parseNoteBlocks(undefined), []);
+  });
+
+  test('NoteRender', '综合文档块类型顺序正确', () => {
+    const md = '# T\n## S\n- a\n1. b\n- [ ] c\n| h |\n| --- |\n| v |\n> q\n---\n段落';
+    const t = lib.parseNoteBlocks(md).map((x) => x.type).join(',');
+    assert.strictEqual(t, 'h1,h2,li,oli,check,table,quote,hr,p');
   });
 })();
 

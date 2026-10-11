@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>笔记图片渲染预览</title>
+<style>
+  body { margin:0; background:#0F172A; padding:0; font-family: sans-serif; }
+  #out { width: 900px; margin:0; }
+  #out img { width: 900px; display:block; }
+  #info { display:none; }
+</style>
+</head>
+<body>
+<div id="info">渲染中…</div>
+<div id="out"></div>
+<script src="./note-render.js"></script>
+<script>
+var MD = [
+'# 数据库原理 · 第3讲 关系模型与范式',
+'',
+'## 一句话总览',
+'本讲从关系模型的基本概念出发，重点讲解函数依赖与三大范式，并通过一个完整实例演示如何把不合格的表逐步分解为 3NF。',
+'',
+'## 章节笔记',
+'',
+'### 第 1 章 · 关系模型基础（02:15）',
+'- **关系（Relation）**：一张二维表，行称为元组，列称为属性',
+'- **主键（Primary Key）**：能唯一标识一个元组的属性或属性组',
+'- **外键（Foreign Key）**：引用另一张表主键的属性，用于维护参照完整性',
+'- **候选键**：能唯一标识元组的最小属性集，一个关系可以有多个候选键',
+'',
+'### 第 2 章 · 函数依赖（18:40）',
+'- **函数依赖 X→Y**：X 的取值确定后，Y 的取值也随之唯一确定',
+'- **完全函数依赖**：X 的任何一个真子集都不能决定 Y',
+'- **部分函数依赖**：X 的某个真子集就能决定 Y',
+'- **传递函数依赖**：X→Y 且 Y→Z，并且 Y 不决定 X，则称 Z 传递依赖于 X',
+'',
+'### 第 3 章 · 三大范式（35:20）',
+'- **1NF**：每个属性都是原子的，不可再分',
+'- **2NF**：满足 1NF，且不存在非主属性对候选键的部分函数依赖',
+'- **3NF**：满足 2NF，且不存在非主属性对候选键的传递函数依赖',
+'- **BCNF**：每个决定因素都包含候选键，是 3NF 的加强版本',
+'',
+'### 第 4 章 · 范式分解实例（52:10）',
+'- 原始表：学生选课（学号, 姓名, 系名, 系主任, 课程号, 成绩）',
+'- 存在问题：系主任传递依赖于学号，违反 3NF',
+'- 分解方案：拆成 学生表（学号, 姓名, 系名）、系表（系名, 系主任）、选课表（学号, 课程号, 成绩）',
+'- 分解结果：三张表均满足 3NF，且保持了无损连接与函数依赖',
+'',
+'## 关键概念速览',
+'| 概念 | 说明 |',
+'| --- | --- |',
+'| 关系 | 二维表，行=元组，列=属性 |',
+'| 候选键 | 能唯一标识元组的最小属性集 |',
+'| 部分依赖 | 主键的一部分就能决定非主属性 |',
+'| 传递依赖 | X→Y→Z 且 Y 不决定 X |',
+'| 3NF | 无部分依赖、无传递依赖 |',
+'',
+'## 复习清单',
+'- [ ] 能准确区分候选键、主键与外键',
+'- [ ] 会判断一个函数依赖是完全依赖还是部分依赖',
+'- [x] 能独立完成一张表的 3NF 分解',
+'- [ ] 理解 BCNF 与 3NF 的差别',
+''
+].join('\n');
+
+var canvas = NoteRender.renderToCanvas(MD, {
+  title: '数据库原理 · 第3讲 关系模型与范式',
+  subtitle: 'B站网课 · 时长 58:32 · 由 DeepSeek 整理',
+  footer: '由 B站字幕助手 生成 · 章节化笔记'
+}, { width: 900, scale: 2 });
+
+var img = document.createElement('img');
+img.src = canvas.toDataURL('image/png');
+document.getElementById('out').appendChild(img);
+document.getElementById('info').textContent = '渲染完成 · 画布 ' + canvas.width + '×' + canvas.height + ' px';
+window.__done = true;
+</script>
+</body>
+</html>

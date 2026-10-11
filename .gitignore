@@ -18,3 +18,7 @@ Desktop.ini
 node_modules/
 .env
 .env.*
+
+# 渲染器开发验证产物（保留源码 preview.html / note-render.js）
+tools/preview*.png
+tools/preview2.html
