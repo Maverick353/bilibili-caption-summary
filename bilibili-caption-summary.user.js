@@ -362,7 +362,8 @@
   // 默认系统提示词与总结结构模板
   const SYSTEM_PROMPT =
     '你是一名专业的中文视频内容分析助手。你会阅读视频逐字稿并输出准确、精炼、结构化的总结。' +
-    '请使用简体中文和 Markdown 格式，不要编造逐字稿中不存在的信息。';
+    '请使用简体中文和 Markdown 格式，不要编造逐字稿中不存在的信息。' +
+    '注意：你只能看到逐字稿文字，看不到视频画面；若逐字稿提到「如图所示」「这个 PPT」「这条公式」等，只整理讲师口述的内容，不要臆测或补全画面里可能出现的内容。';
 
   const DEFAULT_TEMPLATE =
     '请阅读以下视频逐字稿（每行开头为 [时间戳]），并输出一份结构化的中文总结，必须严格使用如下 Markdown 结构：\n\n' +
@@ -380,7 +381,8 @@
     '2. 严格忠于逐字稿，不编造未出现的信息；' +
     '3. 笔记按「章 → 节 → 知识点 → 要点」分层，层级清楚；' +
     '4. 能识别讲师的章节切换信号（如「接下来我们看…」「第二个部分」「总结一下」）来划分章节；' +
-    '5. 每个知识点尽量保留对应的 [时间戳]。';
+    '5. 每个知识点尽量保留对应的 [时间戳]；' +
+    '6. 你只能读取逐字稿文字，看不到视频画面——本工具不具备画面识别能力；若讲师提到「如图所示」「看这个 PPT」「这里的公式」，只记录其口述内容，不要臆测或补全画面里可能出现的内容。';
 
   // 章节化笔记的固定 Markdown 骨架（用户提示词模板，含 {{title}} / {{transcript}} 占位符）
   const CHAPTER_TEMPLATE =
@@ -1101,6 +1103,12 @@
     .bcs-textarea { resize: vertical; }
     .bcs-status { color: #888; font-size: 12px; min-height: 16px; margin-bottom: 8px; }
     .bcs-mini { font-size: 11px; color: #777; }
+    .bcs-scope {
+      background: #2a2118; border: 1px solid #5a4526; border-left: 3px solid #e8a33d;
+      border-radius: 4px; padding: 7px 9px; margin-bottom: 8px;
+      font-size: 11px; line-height: 1.55; color: #d6b276;
+    }
+    .bcs-scope b { color: #f0c070; }
     .bcs-pre {
       background: #16161a; border: 1px solid #333; border-radius: 6px; padding: 8px;
       white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow-y: auto;
@@ -1225,6 +1233,7 @@
       '        <option value="general">通用总结</option>' +
       '        <option value="chapter">章节化笔记</option>' +
       '      </select></div>' +
+      '    <div class="bcs-scope" data-role="scope-notice"><b>适用范围：</b>本工具只读取视频自带的<b>字幕文本</b>，不具备画面识别能力（无 OCR / 视觉理解）。仅适用于<b>访谈、讲座、纯口述讲解</b>等「画面不含实质内容」的视频；若知识点主要靠 <b>PPT / 板书 / 公式 / 图表 / 代码演示</b> 呈现，这些画面内容<b>不会被总结到</b>。无字幕轨（含仅硬字幕）的视频无法使用。</div>' +
       '    <div class="bcs-row"><button class="bcs-btn" data-role="gen">生成总结</button>' +
       '      <button class="bcs-btn sec" data-role="copy-sum">复制总结</button>' +
       '      <button class="bcs-btn sec" data-role="exp-md">导出 Markdown</button>' +

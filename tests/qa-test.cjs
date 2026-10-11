@@ -1057,6 +1057,15 @@ test('Load', '章节化笔记 3 个新导出存在（显式断言）', () => {
   test('Redline', 'LLM 返回文本经 textContent 渲染（renderSummary 未被改为 innerHTML）', () => {
     assert.ok(/el\.textContent\s*=\s*text\s*\|\|\s*''/.test(SRC_TEXT), 'renderSummary 应使用 textContent');
   });
+
+  test('Redline', 'UI 明确标注适用范围（仅总结字幕文本 / 不解析画面）', () => {
+    // 该提示是产品适用范围声明，必须常驻，防止后续重构被误删
+    assert.ok(/data-role="scope-notice"/.test(SRC_TEXT), '总结面板应保留适用范围提示节点 scope-notice');
+    assert.ok(/字幕文本/.test(SRC_TEXT), '适用范围提示应写明「只读取字幕文本」');
+    assert.ok(/画面识别/.test(SRC_TEXT), '适用范围提示应写明「不具备画面识别能力」');
+    assert.ok(/访谈/.test(SRC_TEXT), '适用范围提示应点明「适用于访谈类视频」');
+    assert.ok(/不会被总结到/.test(SRC_TEXT), '适用范围提示应点明 PPT 等画面内容不会被总结到');
+  });
 })();
 
 // ============================================================
