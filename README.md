@@ -64,6 +64,8 @@
 
 ## 二、安装步骤
 
+> **推荐：从 [Releases](https://github.com/Maverick353/bilibili-caption-summary/releases/latest) 下载** `bilibili-caption-summary.user.js`（脚本本体，约 100KB），无需克隆整个仓库；源码完整包也在同一页面的附件里。
+
 1. **安装 Tampermonkey**：在 Chrome / Edge 的扩展商店搜索 `Tampermonkey`（篡改猴）并安装。
 2. **新建脚本**：点击浏览器右上角 Tampermonkey 图标 → 「管理面板」→ 「+」新建脚本。
 3. **粘贴代码**：打开本目录下的 `bilibili-caption-summary.user.js`，**全选复制**，覆盖编辑器里的默认内容。
